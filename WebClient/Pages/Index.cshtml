@@ -1,0 +1,46 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Letters";
+}
+
+<div>
+    <h1 class="display-4 text-center mb-5">Countown - Letters</h1>
+
+    <div class="row">
+        <div class="letter-container d-inline-flex justify-content-center align-items-center m-auto">
+            @for (var i = 0; i < 9; i++)
+            {
+                <div class="letter border"></div>
+            }
+        </div>
+    </div>
+    <div class="row justify-content-evenly mt-3">
+        <h3>Round: <span id="round">-</span></h3>
+        <h3>Score: <span id="score">-</span></h3>
+    </div>
+    <div class="row justify-content-center mt-3">
+        <button class="btn btn-outline-secondary w-25 m-2">Vowel</button>
+        <button class="btn btn-outline-dark w-25 m-2">Consonant</button>
+    </div>
+    <div class="row justify-content-center mt-3">
+        <div class="form-group row col-7">
+            <label for="guess" class="col-12 col-form-label">Guess</label>
+            <div class="col-10">
+                <input
+                    id="guess"
+                    name="guess"
+                    type="text"
+                    class="form-control"
+                    placeholder="Type your guess here"
+                    disabled="disabled">
+            </div>
+            <div class="col-2">
+                <button class="btn btn-outline-primary">Check</button>
+            </div>
+        </div>
+        <div class="col-12 d-flex justify-content-center mt-3">
+            <button class="btn btn-outline-danger">Reset game</button>
+        </div>
+    </div>
+</div>
