@@ -24,21 +24,27 @@ namespace GameCore
         private const byte MaxLettersTotal = 9;
         private const byte MaxLettersPerType = 5;
         private const byte MaxRounds = 4;
-        
+        private const byte MinLettersInWord = 2;
+
         public State State { get; }
 
-        private readonly string[] _words;
+        private readonly List<string> _words;
         private readonly Random _rnd = new Random();
 
         public Countdown()
         {
             // load words into memory
             var workingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            _words = File.ReadAllLines(@$"{workingDir}\words_alpha.txt", Encoding.UTF8);
+            _words = File
+                .ReadAllLines(@$"{workingDir}\words_alpha.txt", Encoding.UTF8)
+                .ToList();
 
             // sort & filter words.
             // no longer needed as results have been written to file, keeping in case dictionary changes
-            // Array.Sort(_words, new CharAndLengthComparer().Compare);
+            // _words = _words.
+            //     OrderBy(w => w.Length).
+            //     ThenBy(w => w)
+            //     .ToList();
             // _words = _words.Where(w => w.Length <= 9 || w.Length < 2).ToArray();
 
             // initialise state
@@ -57,6 +63,7 @@ namespace GameCore
             {
                 return null;
             }
+
             if (State.IsLetterLimitReached(type))
             {
                 return null;
@@ -67,7 +74,6 @@ namespace GameCore
                 LetterType.Vowel => GetVowel(),
                 LetterType.Consonant => GetConsonant(),
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
-
             };
 
             State.AddUsedLetter(type, letter);
@@ -84,11 +90,60 @@ namespace GameCore
             return Consonants[_rnd.Next(0, Consonants.Length)];
         }
 
-        public string GetLongestWord()
+        /// <summary>
+        /// Finds all words containing letters defined in state.
+        /// </summary>
+        /// <param name="firstMatchOnly">Will stop looking and return results after first matching word length</param>
+        /// <returns>List of matching words or null if none found</returns>
+        public IEnumerable<string> GetWordsFromSelectedLetters(bool firstMatchOnly = false)
         {
-            return "fakeword";
+            // store indexes for all word lengths (2-9)
+            var indexes = new Dictionary<int, int>()
+            {
+                // we know that our dictionary is sorted by word length
+                // and only includes words of minimum and maximum allowed lengths,
+                // therefore first index is always 0
+                {MinLettersInWord, 0}
+            };
+            // populate indexes between 3-9 
+            for (var i = MinLettersInWord + 1; i <= MaxLettersTotal; i++)
+            {
+                indexes.TryGetValue(i - 1, out var lastIdx);
+                var idx = _words.FindIndex(lastIdx, w => w.Length == i);
+                indexes.Add(i, idx);
+            }
+            // add "end" index for (MaxLettersTotal + 1)
+            indexes.Add(MaxLettersTotal + 1, _words.Count - 1);
+
+            // find words that contain all letters
+            var letters = State.CurrentLetters.ToLower().ToCharArray();
+            var matches = new List<string>();
+            for (var i = MaxLettersTotal; i >= MinLettersInWord; i--)
+            {
+                // define range for words of length 'i'
+                indexes.TryGetValue(i, out var start);
+                indexes.TryGetValue(i + 1, out var end);
+                // get words from range
+                matches.AddRange(_words
+                    .GetRange(start, end - start)
+                    .Where(w => w.All(letters.Contains))
+                );
+
+                if (firstMatchOnly && matches.Count > 0)
+                {
+                    break;
+                }
+            }
+
+            return matches;
         }
         
+        public string GetLongestWordOrNull()
+        {
+            return GetWordsFromSelectedLetters(true)
+                .FirstOrDefault();
+        }
+
         private bool IsValidWord(string guess)
         {
             return _words.Contains(guess);
@@ -96,8 +151,11 @@ namespace GameCore
 
         public bool IsValidGuessAndUpdateScore(string guess)
         {
-            // todo: check guess uses letters in state
-            
+            var letters = State.CurrentLetters.ToLower().ToCharArray();
+            if (!guess.All(letters.Contains))
+            {
+                return false;
+            }
             if (IsValidWord(guess))
             {
                 State.AddPointsToScore(guess.Length);
@@ -118,10 +176,10 @@ namespace GameCore
             {
                 throw new Exception($"Cannot start new round - maximum of {MaxRounds} rounds reached");
             }
-            
+
             return State.NewRound();
         }
-        
+
         public State ResetGame()
         {
             return State.Reset();

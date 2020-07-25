@@ -24,13 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const $alert = $('#alert');
         const alertClass = `alert-${alertType}`;
         
-        // if ($(alert).hasClass('permanent')){
-        //     // display new message
-        //     setTimeout(() => showAlert(message, alertType, delay),500);
-        //     // display the permanent message again
-        //     return;
-        // }
-
         if ($($alert).text()) {
             // some alert still displaying - try again later. 
             // this approach is far from perfect but it'll do for now
@@ -133,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const guessMessage = (guessValid
                 ? 'Correct! Points have been awarded. '
                 : `Sorry, "${guessVal}" is not a real word. `)
-                + `Longest possible word is "${longestWord}"`;
+                + `FYI, the longest possible word was "${longestWord}"`;
 
             showAlert(guessMessage, guessClass, 6000);
 

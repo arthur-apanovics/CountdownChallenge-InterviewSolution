@@ -60,8 +60,8 @@ namespace WebClient.Controllers
             return Ok(
                 new
                 {
-                    LongestWord = GameCore.GetLongestWord(),
-                    GuessValid = GameCore.IsValidGuessAndUpdateScore(guess),
+                    LongestWord = GameCore.GetLongestWordOrNull(),
+                    GuessValid = GameCore.IsValidGuessAndUpdateScore(guess.ToLower()),
                     State = GameCore.StartNewRoundAndGetStateOrNull()
                 });
         }

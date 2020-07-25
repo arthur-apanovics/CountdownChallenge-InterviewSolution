@@ -11,36 +11,44 @@ namespace GameCore.Models
         private readonly byte _maxLettersPerType;
         private readonly byte _maxLettersTotal;
         private readonly byte _maxRounds;
-        
+
         /// <summary>
         /// Counts the total number of used letters.
         /// </summary>
         public int UsedTotal => UsedVowels.Count + UsedConsonants.Count;
+
         /// <summary>
         /// Keeps track of used vowel letters.
+        /// Can be used to makes some letters appear less often.
         /// </summary>
-        public IList<char> UsedVowels {get; private set;}
+        public IList<char> UsedVowels { get; }
+
         /// <summary>
         /// Keeps track of used consonant letters.
+        /// Can be used to makes some letters appear less often.
         /// </summary>
-        public IList<char> UsedConsonants {get; private set;}
+        public IList<char> UsedConsonants { get; }
+
         /// <summary>
         /// Lazy way to keep track of the order in which letters were used.
         /// There are better ways to this but there's also little time :)
         /// </summary>
         public string CurrentLetters { get; private set; }
+
         /// <summary>
         /// Current game round.
         /// </summary>
-        public byte Round {get; private set;}
+        public byte Round { get; private set; }
+
         /// <summary>
         /// Are more rounds allowed
         /// </summary>
         public bool IsRoundLimitReached { get; private set; }
+
         /// <summary>
         /// Current game score.
         /// </summary>
-        public uint Score {get; private set;}
+        public uint Score { get; private set; }
 
         public State(byte maxLettersPerType, byte maxLettersTotal, byte maxRounds)
         {
@@ -48,15 +56,15 @@ namespace GameCore.Models
             _maxLettersPerType = maxLettersPerType;
             _maxLettersTotal = maxLettersTotal;
             _maxRounds = maxRounds;
-            
+
             // init stuff
             UsedVowels = new List<char>(maxLettersPerType);
             UsedConsonants = new List<char>(maxLettersPerType);
-            
+
             // initialise other variables
             Reset();
         }
-        
+
         public bool IsTotalLetterLimitReached()
         {
             return UsedTotal >= _maxLettersTotal;
@@ -82,7 +90,7 @@ namespace GameCore.Models
 
             return this;
         }
-        
+
         public State NewRound()
         {
             UsedVowels.Clear();
