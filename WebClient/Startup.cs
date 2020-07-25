@@ -48,7 +48,14 @@ namespace WebClient
 
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints => { endpoints.MapRazorPages(); });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapRazorPages();
+                
+                endpoints.MapControllerRoute(
+                    name: "game",
+                    pattern: "{controller=Game}/{action}/{param?}");
+            });
         }
     }
 }

@@ -75,6 +75,14 @@ body {
   justify-content: space-evenly!important;
 }
 
+.game-container {
+  position: relative;
+}
+
+.alert-container {
+  min-height: calc(50px + 1rem);
+}
+
 .letter-container {
 }
 

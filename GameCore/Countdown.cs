@@ -2,11 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using GameCore.Enums;
+using GameCore.Models;
 
 namespace GameCore
 {
+    /// <summary>
+    /// Contains game logic, rules and state
+    /// </summary>
     public class Countdown
     {
         private static readonly char[] Vowels =
@@ -15,78 +20,111 @@ namespace GameCore
         private static readonly char[] Consonants =
             {'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'X', 'Z', 'W', 'Y'};
 
-        private const byte LetterLimitTotal = 9;
-        private const byte LetterLimit = 5;
+        // game rules to use in state
+        private const byte MaxLettersTotal = 9;
+        private const byte MaxLettersPerType = 5;
+        private const byte MaxRounds = 4;
         
-        private int UsedTotal => _usedVowels.Count + _usedConsonants.Count;
-        private readonly List<char> _usedVowels = new List<char>();
-        private readonly List<char> _usedConsonants = new List<char>();
-        private uint _score = 0;
+        public State State { get; }
 
-        private readonly string[] _words = File.ReadAllLines(@".\words_alpha.txt", Encoding.UTF8);
+        private readonly string[] _words;
         private readonly Random _rnd = new Random();
 
         public Countdown()
         {
+            // load words into memory
+            var workingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            _words = File.ReadAllLines(@$"{workingDir}\words_alpha.txt", Encoding.UTF8);
+
+            // sort & filter words.
+            // no longer needed as results have been written to file, keeping in case dictionary changes
+            // Array.Sort(_words, new CharAndLengthComparer().Compare);
+            // _words = _words.Where(w => w.Length <= 9 || w.Length < 2).ToArray();
+
+            // initialise state
+            State = new State(MaxLettersPerType, MaxLettersTotal, MaxRounds);
         }
 
-        public char? GetLetterOrNull(LetterType letterType)
+        /// <summary>
+        /// Fetches a random letter of specific type and updates state.
+        /// </summary>
+        /// <param name="type">Type of letter to fetch</param>
+        /// <returns>requested letter of type or null if this letter type limit
+        /// or total letter limit has been exhausted</returns>
+        public char? GetLetterAndUpdateStateOrNull(LetterType type)
         {
-            if (IsLetterLimitReached())
+            if (State.IsTotalLetterLimitReached())
             {
                 return null;
             }
-            
-            return letterType switch
+            if (State.IsLetterLimitReached(type))
             {
-                LetterType.Vowel => GetVowelOrNull(),
-                LetterType.Consonant => GetConsonantOrNull(),
-                _ => throw new Exception("Unknown letter type")
+                return null;
+            }
+
+            var letter = type switch
+            {
+                LetterType.Vowel => GetVowel(),
+                LetterType.Consonant => GetConsonant(),
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+
             };
+
+            State.AddUsedLetter(type, letter);
+            return letter;
         }
 
-        private bool IsLetterLimitReached()
+        private char GetVowel()
         {
-            return UsedTotal >= LetterLimitTotal;
+            return Vowels[_rnd.Next(0, Vowels.Length)];
+        }
+
+        private char GetConsonant()
+        {
+            return Consonants[_rnd.Next(0, Consonants.Length)];
+        }
+
+        public string GetLongestWord()
+        {
+            return "fakeword";
         }
         
-        private char? GetVowelOrNull()
+        private bool IsValidWord(string guess)
         {
-            if (_usedVowels.Count >= LetterLimit)
+            return _words.Contains(guess);
+        }
+
+        public bool IsValidGuessAndUpdateScore(string guess)
+        {
+            // todo: check guess uses letters in state
+            
+            if (IsValidWord(guess))
             {
-                return null;
+                State.AddPointsToScore(guess.Length);
+                return true;
             }
 
-            var vowel = Vowels[_rnd.Next(0, Vowels.Length)];
-            _usedVowels.Add(vowel);
-            
-            return vowel;
+            return false;
         }
 
-        private char? GetConsonantOrNull()
+        /// <summary>
+        /// Start new round and return state.
+        /// </summary>
+        /// <returns>New round state or Null if no more rounds left</returns>
+        /// <exception cref="Exception"></exception>
+        public State StartNewRoundAndGetStateOrNull()
         {
-            if (_usedConsonants.Count >= LetterLimit)
+            if (State.IsRoundLimitReached)
             {
-                return null;
+                throw new Exception($"Cannot start new round - maximum of {MaxRounds} rounds reached");
             }
-
-            var consonant = Vowels[_rnd.Next(0, Vowels.Length)];
-            _usedConsonants.Add(consonant);
             
-            return consonant;
+            return State.NewRound();
         }
-
-        public IEnumerable<string> GetPossibleWords()
+        
+        public State ResetGame()
         {
-            var allLeters = _usedVowels.Concat(_usedConsonants).ToArray();
-            return _words.Where(w => w.IndexOfAny(allLeters) != -1);
-        }
-
-        public void Reset()
-        {
-            _usedVowels.Clear();
-            _usedConsonants.Clear();
-            _score = 0;
+            return State.Reset();
         }
     }
 }
