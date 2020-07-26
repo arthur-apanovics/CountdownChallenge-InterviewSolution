@@ -15,10 +15,10 @@ namespace WebClient.Controllers
         /// </summary>
         private static readonly Countdown GameCore = new Countdown();
 
-        public GameController()
-        {
-        }
-
+        /// <summary>
+        /// Fetches game state. Mainly used on page load to populate UI with current state.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public IActionResult GetState()
         {
@@ -48,6 +48,11 @@ namespace WebClient.Controllers
             return Ok(GameCore.GetLetterAndUpdateStateOrNull(param));
         }
 
+        /// <summary>
+        /// Submits user guess, updates score and advances round.
+        /// </summary>
+        /// <param name="guess">User submitted guess</param>
+        /// <returns>200 with state and extra variables or 409 with exception</returns>
         [HttpPost]
         public IActionResult SubmitGuessAndGetResult(string guess)
         {
@@ -66,6 +71,10 @@ namespace WebClient.Controllers
                 });
         }
 
+        /// <summary>
+        /// Restarts game
+        /// </summary>
+        /// <returns></returns>
         [HttpPost]
         public IActionResult ResetGame()
         {

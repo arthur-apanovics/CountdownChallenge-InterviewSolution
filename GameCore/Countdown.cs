@@ -31,6 +31,9 @@ namespace GameCore
         private readonly List<string> _words;
         private readonly Random _rnd = new Random();
 
+        /// <summary>
+        /// Loads word list and initialises state.
+        /// </summary>
         public Countdown()
         {
             // load words into memory
@@ -93,9 +96,9 @@ namespace GameCore
         /// <summary>
         /// Finds all words containing letters defined in state.
         /// </summary>
-        /// <param name="firstMatchOnly">Will stop looking and return results after first matching word length</param>
+        /// <param name="returnOnFirstMatch">Will stop looking and return results after first matching word length</param>
         /// <returns>List of matching words or null if none found</returns>
-        public IEnumerable<string> GetWordsFromSelectedLetters(bool firstMatchOnly = false)
+        private IEnumerable<string> GetWordsFromSelectedLetters(bool returnOnFirstMatch = false)
         {
             // store indexes for all word lengths (2-9)
             var indexes = new Dictionary<int, int>()
@@ -112,6 +115,7 @@ namespace GameCore
                 var idx = _words.FindIndex(lastIdx, w => w.Length == i);
                 indexes.Add(i, idx);
             }
+
             // add "end" index for (MaxLettersTotal + 1)
             indexes.Add(MaxLettersTotal + 1, _words.Count - 1);
 
@@ -129,7 +133,7 @@ namespace GameCore
                     .Where(w => w.All(letters.Contains))
                 );
 
-                if (firstMatchOnly && matches.Count > 0)
+                if (returnOnFirstMatch && matches.Count > 0)
                 {
                     break;
                 }
@@ -137,7 +141,11 @@ namespace GameCore
 
             return matches;
         }
-        
+
+        /// <summary>
+        /// Scan word list for longest word matching letters contained in state.
+        /// </summary>
+        /// <returns>First word in list or null if none found for current letter pattern</returns>
         public string GetLongestWordOrNull()
         {
             return GetWordsFromSelectedLetters(true)
@@ -149,6 +157,11 @@ namespace GameCore
             return _words.Contains(guess);
         }
 
+        /// <summary>
+        /// Checks if user submitted guess is valid and updates score if necessary.
+        /// </summary>
+        /// <param name="guess"></param>
+        /// <returns>Guess correct or not</returns>
         public bool IsValidGuessAndUpdateScore(string guess)
         {
             var letters = State.CurrentLetters.ToLower().ToCharArray();
@@ -156,6 +169,7 @@ namespace GameCore
             {
                 return false;
             }
+
             if (IsValidWord(guess))
             {
                 State.AddPointsToScore(guess.Length);
@@ -180,6 +194,10 @@ namespace GameCore
             return State.NewRound();
         }
 
+        /// <summary>
+        /// Resets game to initial state.
+        /// </summary>
+        /// <returns></returns>
         public State ResetGame()
         {
             return State.Reset();
