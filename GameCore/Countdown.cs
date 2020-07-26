@@ -38,9 +38,9 @@ namespace GameCore
         {
             // load words into memory
             var workingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            _words = File
-                .ReadAllLines(@$"{workingDir}\words_alpha.txt", Encoding.UTF8)
-                .ToList();
+            // word list from https://github.com/dwyl/english-words/
+            // (seems to have a lot of weird words in it but that's not the point of this exercise)
+            _words = File .ReadAllLines(@$"{workingDir}\words_alpha.txt", Encoding.UTF8) .ToList();
 
             // sort & filter words.
             // no longer needed as results have been written to file, keeping in case dictionary changes
